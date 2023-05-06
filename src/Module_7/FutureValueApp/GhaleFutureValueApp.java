@@ -1,4 +1,4 @@
-package FutureValueApp;
+package Module_7.FutureValueApp;
 
 import javafx.application.Application;
 import javafx.geometry.Pos;
