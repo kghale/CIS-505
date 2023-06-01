@@ -1,21 +1,24 @@
 package GradeBookApp;
 
 import javafx.application.Application;
-import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+
+import java.io.*;
+import java.util.ArrayList;
 
 public class GhaleGradeBookApp extends Application {
     private TextField firstNameField;
     private TextField lastNameField;
     private TextField courseField;
     private ComboBox<String> gradeComboBox;
+    private TextArea resultsArea;
+    private ArrayList<Student> gradeBook;
 
     public static void main(String[] args) {
         launch(args);
@@ -23,59 +26,114 @@ public class GhaleGradeBookApp extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        primaryStage.setTitle("Grade Book App");
+        primaryStage.setTitle("Grade Book");
 
-        // Create form fields
+        // Create form elements
         Label firstNameLabel = new Label("First Name:");
-        firstNameField = new TextField();
-
         Label lastNameLabel = new Label("Last Name:");
-        lastNameField = new TextField();
-
         Label courseLabel = new Label("Course:");
-        courseField = new TextField();
-
         Label gradeLabel = new Label("Grade:");
-        gradeComboBox = new ComboBox<>(FXCollections.observableArrayList("A", "B", "C", "D", "F"));
+
+        firstNameField = new TextField();
+        lastNameField = new TextField();
+        courseField = new TextField();
+        gradeComboBox = new ComboBox<>();
+        gradeComboBox.getItems().addAll("A", "B", "C", "D", "F");
 
         Button clearButton = new Button("Clear");
-        clearButton.setOnAction(e -> clearFormFields());
+        Button viewButton = new Button("View Grades");
+        Button saveButton = new Button("Save");
 
-        Button viewButton = new Button("View Entries");
+        resultsArea = new TextArea();
+        resultsArea.setEditable(false);
 
-        Button saveButton = new Button("Save Entry");
+        // Create event handlers
+        clearButton.setOnAction(e -> clearForm());
+        viewButton.setOnAction(e -> viewGrades());
+        saveButton.setOnAction(e -> saveGrade());
 
-        // Create layout and add components
+        // Create layout
         GridPane gridPane = new GridPane();
-        gridPane.setPadding(new Insets(10));
+        gridPane.setAlignment(Pos.CENTER);
         gridPane.setHgap(10);
         gridPane.setVgap(10);
+        gridPane.setPadding(new Insets(10));
 
         gridPane.add(firstNameLabel, 0, 0);
         gridPane.add(firstNameField, 1, 0);
-
         gridPane.add(lastNameLabel, 0, 1);
         gridPane.add(lastNameField, 1, 1);
-
         gridPane.add(courseLabel, 0, 2);
         gridPane.add(courseField, 1, 2);
-
         gridPane.add(gradeLabel, 0, 3);
         gridPane.add(gradeComboBox, 1, 3);
-
         gridPane.add(clearButton, 0, 4);
         gridPane.add(viewButton, 1, 4);
-        gridPane.add(saveButton, 2, 4);
+        gridPane.add(saveButton, 0, 5, 2, 1);
 
-        Scene scene = new Scene(gridPane);
+        VBox vbox = new VBox(10);
+        vbox.setAlignment(Pos.CENTER);
+        vbox.setPadding(new Insets(10));
+        vbox.getChildren().addAll(gridPane, resultsArea);
+
+        // Create scene and show the stage
+        Scene scene = new Scene(vbox, 400, 400);
         primaryStage.setScene(scene);
         primaryStage.show();
+
+        gradeBook = new ArrayList<>();
     }
 
-    private void clearFormFields() {
+    private void clearForm() {
         firstNameField.clear();
         lastNameField.clear();
         courseField.clear();
         gradeComboBox.getSelectionModel().clearSelection();
+    }
+
+    private void viewGrades() {
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader("grades.csv"));
+            String line;
+            StringBuilder content = new StringBuilder();
+            while ((line = reader.readLine()) != null) {
+                content.append(line).append("\n");
+            }
+            reader.close();
+            resultsArea.setText(content.toString());
+        } catch (IOException e) {
+            showAlert("Error", "Error reading grades.csv file.");
+        }
+    }
+
+    private void saveGrade() {
+        String firstName = firstNameField.getText();
+        String lastName = lastNameField.getText();
+        String course = courseField.getText();
+        String grade = gradeComboBox.getSelectionModel().getSelectedItem();
+
+        Student student = new Student(firstName, lastName, course, grade);
+        gradeBook.add(student);
+
+        try {
+            BufferedWriter writer = new BufferedWriter(new FileWriter("grades.csv", true));
+            if (gradeBook.size() == 1) {
+                writer.write("First Name, Last Name, Course, Grade\n");
+            }
+            writer.write(firstName + ", " + lastName + ", " + course + ", " + grade + "\n");
+            writer.close();
+            resultsArea.appendText(student.toString() + "\n");
+            clearForm();
+        } catch (IOException e) {
+            showAlert("Error", "Error writing to grades.csv file.");
+        }
+    }
+
+    private void showAlert(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 }
