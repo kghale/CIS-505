@@ -12,6 +12,12 @@ import javafx.stage.Stage;
 import java.io.*;
 import java.util.ArrayList;
 
+/**
+ * Liang, Y.D. (2019). Introduction to Java Programming and Data Structures:
+ * Comprehensive Version (12th ed.). Pearson Education, Inc.
+ * Modified by R. Krasso 2021
+ * Additional modifications by Kabir Ghale 2023
+ */
 public class GhaleGradeBookApp extends Application {
     private TextField firstNameField;
     private TextField lastNameField;
